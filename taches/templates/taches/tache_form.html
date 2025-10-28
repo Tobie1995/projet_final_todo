@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Ajouter une tâche</title>
+	</head>
+	<body>
+		<h1>Ajouter une tâche</h1>
+
+		<form method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<button type="submit">Enregistrer</button>
+			<a href="{% url 'taches:liste_html' %}">Annuler</a>
+		</form>
+
+	</body>
+	</html>
