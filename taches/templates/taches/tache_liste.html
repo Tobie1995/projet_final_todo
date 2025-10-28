@@ -3,21 +3,28 @@
 {% block title %}Liste des tâches{% endblock %}
 
 {% block content %}
-	<h1>Liste des tâches</h1>
-
-	<p><a href="{% url 'taches:ajouter' %}">Ajouter une nouvelle tâche</a></p>
+	<div class="page-header">
+		<h1>Liste des tâches</h1>
+		<p><a class="btn" href="{% url 'taches:ajouter' %}">Ajouter une nouvelle tâche</a></p>
+	</div>
 
 	{% if taches %}
 		<ul>
 			{% for t in taches %}
 				<li>
-					<strong>{{ t.titre }}</strong>
-					{% if t.termine %} (terminée){% endif %}
-					<br>
-					<small>Créée le: {{ t.cree_le }}</small>
-					<br>
-					<a href="{% url 'taches:modifier' t.pk %}">Modifier</a> |
-					<a href="{% url 'taches:supprimer' t.pk %}">Supprimer</a>
+					<article class="task-card {% if t.termine %}task-complete{% endif %}" aria-labelledby="tache-{{ t.pk }}">
+						<div class="task-body">
+							<strong id="tache-{{ t.pk }}">{{ t.titre }}</strong>
+							{% if t.description %}
+								<p>{{ t.description }}</p>
+							{% endif %}
+							<div class="meta">Créée le: {{ t.cree_le|date:"d/m/Y H:i" }}</div>
+						</div>
+						<div class="task-actions" role="group" aria-label="Actions pour {{ t.titre }}">
+							<a class="btn" href="{% url 'taches:modifier' t.pk %}">Modifier</a>
+							<a class="btn btn-danger" href="{% url 'taches:supprimer' t.pk %}">Supprimer</a>
+						</div>
+					</article>
 				</li>
 			{% endfor %}
 		</ul>

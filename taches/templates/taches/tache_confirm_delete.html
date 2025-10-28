@@ -9,7 +9,7 @@
 
 	<form method="post">
 		{% csrf_token %}
-		<button type="submit">Oui, supprimer</button>
-		<a href="{% url 'taches:liste_html' %}">Annuler</a>
+		<button type="submit" class="btn btn-danger">Oui, supprimer</button>
+		<a class="btn-secondary" href="{% url 'taches:liste_html' %}">Annuler</a>
 	</form>
 {% endblock %}
