@@ -104,3 +104,18 @@ def tache_update_form(request, pk):
         form = TacheForm(instance=t)
 
     return render(request, 'taches/tache_form.html', {'form': form, 'tache': t})
+
+
+def tache_delete_form(request, pk):
+	"""Render a confirmation page and delete the Tache on POST.
+
+	Uses template `taches/tache_confirm_delete.html`. On successful deletion
+	redirects to the HTML task list view `taches:liste_html`.
+	"""
+	t = get_object_or_404(Tache, pk=pk)
+
+	if request.method == 'POST':
+		t.delete()
+		return redirect(reverse('taches:liste_html'))
+
+	return render(request, 'taches/tache_confirm_delete.html', {'tache': t})
