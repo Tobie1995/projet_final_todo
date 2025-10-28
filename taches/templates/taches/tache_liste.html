@@ -1,0 +1,27 @@
+{% extends "taches/base.html" %}
+
+{% block title %}Liste des tâches{% endblock %}
+
+{% block content %}
+	<h1>Liste des tâches</h1>
+
+	<p><a href="{% url 'taches:ajouter' %}">Ajouter une nouvelle tâche</a></p>
+
+	{% if taches %}
+		<ul>
+			{% for t in taches %}
+				<li>
+					<strong>{{ t.titre }}</strong>
+					{% if t.termine %} (terminée){% endif %}
+					<br>
+					<small>Créée le: {{ t.cree_le }}</small>
+					<br>
+					<a href="{% url 'taches:modifier' t.pk %}">Modifier</a> |
+					<a href="{% url 'taches:supprimer' t.pk %}">Supprimer</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>Aucune tâche pour l'instant.</p>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'taches/css/style.css' %}">
+    <title>{% block title %}Tâches{% endblock %}</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="{% url 'taches:liste_html' %}">Liste</a> |
+        <a href="{% url 'taches:ajouter' %}">Ajouter</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <small>&copy; {{ now|default:None }}</small>
+    </footer>
+  </body>
+  </html>
