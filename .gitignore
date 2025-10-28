@@ -1,0 +1,115 @@
+from django.urls import path
+from . import views
+
+app_name = "taches"
+
+urlpatterns = [
+    # CRUD routes for Tache
+    path("", views.tache_list, name="list"),
+    path("create/", views.tache_create, name="create"),
+    path("<int:pk>/", views.tache_detail, name="detail"),
+    path("<int:pk>/update/", views.tache_update, name="update"),
+    path("<int:pk>/delete/", views.tache_delete, name="delete"),
+]from django.urls import path
+from . import views
+
+app_name = "taches"
+
+urlpatterns = [
+    # CRUD routes for Tache
+    path("", views.tache_list, name="list"),
+    path("create/", views.tache_create, name="create"),
+    path("<int:pk>/", views.tache_detail, name="detail"),
+    path("<int:pk>/update/", views.tache_update, name="update"),
+    path("<int:pk>/delete/", views.tache_delete, name="delete"),
+]from django.urls import path
+from . import views
+
+app_name = "taches"
+
+urlpatterns = [
+    # CRUD routes for Tache
+    path("", views.tache_list, name="list"),
+    path("create/", views.tache_create, name="create"),
+    path("<int:pk>/", views.tache_detail, name="detail"),
+    path("<int:pk>/update/", views.tache_update, name="update"),
+    path("<int:pk>/delete/", views.tache_delete, name="delete"),
+]from django.urls import path
+from . import views
+
+app_name = "taches"
+
+urlpatterns = [
+    # CRUD routes for Tache
+    path("", views.tache_list, name="list"),
+    path("create/", views.tache_create, name="create"),
+    path("<int:pk>/", views.tache_detail, name="detail"),
+    path("<int:pk>/update/", views.tache_update, name="update"),
+    path("<int:pk>/delete/", views.tache_delete, name="delete"),
+]from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('taches/', include('taches.urls', namespace='taches')),
+]from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('taches/', include('taches.urls', namespace='taches')),
+]# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# If using pipenv
+Pipfile.lock
+
+# pyenv
+.python-version
+
+# celery beat
+celerybeat-schedule
+
+# dotenv
+.env
+.env.*
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml

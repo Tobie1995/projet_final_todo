@@ -1,0 +1,14 @@
+{% extends "taches/base.html" %}
+
+{% block title %}{% if tache %}Modifier{% else %}Ajouter{% endif %} une tâche{% endblock %}
+
+{% block content %}
+	<h1>{% if tache %}Modifier{% else %}Ajouter{% endif %} une tâche</h1>
+
+	<form method="post">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<button type="submit">{% if tache %}Mettre à jour{% else %}Enregistrer{% endif %}</button>
+		<a href="{% url 'taches:liste_html' %}">Annuler</a>
+	</form>
+{% endblock %}
