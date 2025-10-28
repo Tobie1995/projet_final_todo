@@ -85,3 +85,22 @@ def tache_create_form(request):
 		form = TacheForm()
 
 	return render(request, 'taches/tache_form.html', {'form': form})
+
+
+def tache_update_form(request, pk):
+    """Render and process a ModelForm to edit an existing Tache.
+
+    Reuses the `taches/tache_form.html` template. On success redirects to the
+    HTML list view (name: 'taches:liste_html').
+    """
+    t = get_object_or_404(Tache, pk=pk)
+
+    if request.method == 'POST':
+        form = TacheForm(request.POST, instance=t)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('taches:liste_html'))
+    else:
+        form = TacheForm(instance=t)
+
+    return render(request, 'taches/tache_form.html', {'form': form, 'tache': t})
