@@ -1,23 +1,21 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+from .views import TacheViewSet
 
 app_name = "taches"
 
+# Création du routeur
+router = DefaultRouter()
+router.register(r'taches', TacheViewSet, basename='tache')
+
 urlpatterns = [
-    # Routes CRUD pour `Tache`
-    path("", views.tache_list, name="list"),
-    path("create/", views.tache_create, name="create"),
     # Vues HTML
     path("liste/", views.tache_list_html, name="liste_html"),
     path("ajouter/", views.tache_create_form, name="ajouter"),
     path("<int:pk>/modifier/", views.tache_update_form, name="modifier"),
     path("<int:pk>/supprimer/", views.tache_delete_form, name="supprimer"),
-    path("<int:pk>/", views.tache_detail, name="detail"),
-    path("<int:pk>/update/", views.tache_update, name="update"),
-    path("<int:pk>/delete/", views.tache_delete, name="delete"),
-    # Route API pour la liste des tâches (DRF)
-    path("api/liste/", views.TacheListCreateAPIView.as_view(), name="liste_taches_api"),
-    path("api/<int:pk>/", views.TacheRetrieveUpdateDestroyAPIView.as_view(), name="detail_tache_api"),
-    # Alias pour compatibilité : permet d'utiliser /taches/api/detail/<pk>/
-    path("api/detail/<int:pk>/", views.TacheRetrieveUpdateDestroyAPIView.as_view(), name="detail_tache_api_alt"),
+    
+    # Inclure les URLs générées par le routeur à la racine de l'app
+    path('', include(router.urls)),
 ]
