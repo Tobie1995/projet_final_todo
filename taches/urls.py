@@ -16,6 +16,10 @@ urlpatterns = [
     path("<int:pk>/modifier/", views.tache_update_form, name="modifier"),
     path("<int:pk>/supprimer/", views.tache_delete_form, name="supprimer"),
     
+    # Alias explicites pour l'API
+    path("api/liste/", TacheViewSet.as_view({"get": "list"}), name="api_liste"),
+    path("api/detail/<int:pk>/", TacheViewSet.as_view({"get": "retrieve"}), name="detail"),
+
     # Inclure les URLs générées par le routeur à la racine de l'app
     path('', include(router.urls)),
 ]
