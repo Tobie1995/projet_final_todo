@@ -4,12 +4,17 @@ from django.urls import reverse
 
 from .models import Tache
 from .forms import TacheForm
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import TacheSerializer
 
 
 def tache_list(request):
-	"""Return a simple JSON list of tasks.
+	"""Retourne une liste JSON simple de tâches.
 
-	Note: This is an API-style JSON view. For an HTML list page see `tache_list_html`.
+	Remarque : il s'agit d'une vue JSON de type API. Pour une page HTML affichant la
+	liste, voir `tache_list_html`.
 	"""
 	taches = Tache.objects.all().order_by('-cree_le')
 	data = [
@@ -20,9 +25,44 @@ def tache_list(request):
 
 
 def tache_list_html(request):
-	"""Render an HTML page with the list of tasks."""
+	"""Rend une page HTML contenant la liste des tâches."""
 	taches = Tache.objects.all().order_by('-cree_le')
 	return render(request, 'taches/tache_liste.html', {'taches': taches})
+
+
+@api_view(['GET', 'POST'])
+def liste_taches_api(request):
+	if request.method == 'GET':
+		taches = Tache.objects.all()
+		serializer = TacheSerializer(taches, many=True)
+		return Response(serializer.data)
+
+	# POST
+	serializer = TacheSerializer(data=request.data)
+	if serializer.is_valid():
+		serializer.save()
+		return Response(serializer.data, status=status.HTTP_201_CREATED)
+	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def detail_tache_api(request, pk):
+	tache = get_object_or_404(Tache, pk=pk)
+
+	if request.method == 'GET':
+		serializer = TacheSerializer(tache)
+		return Response(serializer.data)
+
+	if request.method == 'PUT':
+		serializer = TacheSerializer(tache, data=request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data)
+		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+	# DELETE
+	tache.delete()
+	return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def tache_detail(request, pk):
@@ -31,9 +71,10 @@ def tache_detail(request, pk):
 
 
 def tache_create(request):
-	"""API-style POST create (kept for backward compatibility).
+	"""Création via POST de type API (conservée pour compatibilité ascendante).
 
-	For the HTML form-based creation use `tache_create_form` (see URL `ajouter/`).
+	Pour la création via formulaire HTML, utilisez `tache_create_form` (URL :
+	`ajouter/`).
 	"""
 	if request.method != "POST":
 		return JsonResponse({"detail": "Send a POST with 'titre' and optional 'description' and 'termine'"})
@@ -72,9 +113,9 @@ def tache_delete(request, pk):
 
 
 def tache_create_form(request):
-	"""Render and process a ModelForm to create a new Tache.
+	"""Affiche et traite un ModelForm pour créer une nouvelle `Tache`.
 
-	On success redirect to the HTML list view (name: 'taches:liste_html').
+	En cas de succès, redirige vers la vue HTML list (nom : 'taches:liste_html').
 	"""
 	if request.method == 'POST':
 		form = TacheForm(request.POST)
@@ -88,29 +129,29 @@ def tache_create_form(request):
 
 
 def tache_update_form(request, pk):
-    """Render and process a ModelForm to edit an existing Tache.
+	"""Affiche et traite un ModelForm pour modifier une `Tache` existante.
 
-    Reuses the `taches/tache_form.html` template. On success redirects to the
-    HTML list view (name: 'taches:liste_html').
-    """
-    t = get_object_or_404(Tache, pk=pk)
+	Réutilise le template `taches/tache_form.html`. En cas de succès, redirige
+	vers la vue HTML list (nom : 'taches:liste_html').
+	"""
+	t = get_object_or_404(Tache, pk=pk)
 
-    if request.method == 'POST':
-        form = TacheForm(request.POST, instance=t)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse('taches:liste_html'))
-    else:
-        form = TacheForm(instance=t)
+	if request.method == 'POST':
+		form = TacheForm(request.POST, instance=t)
+		if form.is_valid():
+			form.save()
+			return redirect(reverse('taches:liste_html'))
+	else:
+		form = TacheForm(instance=t)
 
-    return render(request, 'taches/tache_form.html', {'form': form, 'tache': t})
+	return render(request, 'taches/tache_form.html', {'form': form, 'tache': t})
 
 
 def tache_delete_form(request, pk):
-	"""Render a confirmation page and delete the Tache on POST.
+	"""Affiche une page de confirmation et supprime la `Tache` lors d'un POST.
 
-	Uses template `taches/tache_confirm_delete.html`. On successful deletion
-	redirects to the HTML task list view `taches:liste_html`.
+	Utilise le template `taches/tache_confirm_delete.html`. Après suppression
+	réussie, redirige vers la vue HTML list `taches:liste_html`.
 	"""
 	t = get_object_or_404(Tache, pk=pk)
 
