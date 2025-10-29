@@ -16,6 +16,8 @@ urlpatterns = [
     path("<int:pk>/update/", views.tache_update, name="update"),
     path("<int:pk>/delete/", views.tache_delete, name="delete"),
     # Route API pour la liste des tâches (DRF)
-    path("api/liste/", views.liste_taches_api, name="liste_taches_api"),
-    path("api/<int:pk>/", views.detail_tache_api, name="detail_tache_api"),
+    path("api/liste/", views.TacheListCreateAPIView.as_view(), name="liste_taches_api"),
+    path("api/<int:pk>/", views.TacheRetrieveUpdateDestroyAPIView.as_view(), name="detail_tache_api"),
+    # Alias pour compatibilité : permet d'utiliser /taches/api/detail/<pk>/
+    path("api/detail/<int:pk>/", views.TacheRetrieveUpdateDestroyAPIView.as_view(), name="detail_tache_api_alt"),
 ]
