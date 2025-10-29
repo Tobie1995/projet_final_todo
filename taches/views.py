@@ -154,7 +154,11 @@ def tache_update_form(request, pk):
     user = getattr(request, 'user', None)
     if not user or not user.is_authenticated:
         return HttpResponseForbidden("Authentication required")
-    t = get_object_or_404(Tache, pk=pk, owner=user)
+    # Les superusers/staff peuvent modifier n'importe quelle tâche
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        t = get_object_or_404(Tache, pk=pk)
+    else:
+        t = get_object_or_404(Tache, pk=pk, owner=user)
 
     if request.method == 'POST':
         form = TacheForm(request.POST, instance=t)
@@ -176,7 +180,11 @@ def tache_delete_form(request, pk):
     user = getattr(request, 'user', None)
     if not user or not user.is_authenticated:
         return HttpResponseForbidden("Authentication required")
-    t = get_object_or_404(Tache, pk=pk, owner=user)
+    # Les superusers/staff peuvent supprimer n'importe quelle tâche
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        t = get_object_or_404(Tache, pk=pk)
+    else:
+        t = get_object_or_404(Tache, pk=pk, owner=user)
 
     if request.method == 'POST':
         t.delete()
