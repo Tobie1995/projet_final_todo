@@ -7,6 +7,7 @@ from .forms import TacheForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from .serializers import TacheSerializer
 
 
@@ -30,39 +31,26 @@ def tache_list_html(request):
 	return render(request, 'taches/tache_liste.html', {'taches': taches})
 
 
-@api_view(['GET', 'POST'])
-def liste_taches_api(request):
-	if request.method == 'GET':
-		taches = Tache.objects.all()
-		serializer = TacheSerializer(taches, many=True)
-		return Response(serializer.data)
+class TacheListCreateAPIView(ListCreateAPIView):
+	"""API view listant toutes les Tache (GET) et permettant la création (POST).
 
-	# POST
-	serializer = TacheSerializer(data=request.data)
-	if serializer.is_valid():
-		serializer.save()
-		return Response(serializer.data, status=status.HTTP_201_CREATED)
-	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+	Utilise DRF generics.ListCreateAPIView avec le queryset de toutes les
+	instances `Tache` et le `TacheSerializer`.
+	"""
+
+	queryset = Tache.objects.all()
+	serializer_class = TacheSerializer
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def detail_tache_api(request, pk):
-	tache = get_object_or_404(Tache, pk=pk)
+class TacheRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    """API view pour récupérer, mettre à jour ou supprimer une Tache.
 
-	if request.method == 'GET':
-		serializer = TacheSerializer(tache)
-		return Response(serializer.data)
+    Hérite de DRF RetrieveUpdateDestroyAPIView. Utilise le queryset de
+    toutes les instances `Tache` et le `TacheSerializer`.
+    """
 
-	if request.method == 'PUT':
-		serializer = TacheSerializer(tache, data=request.data)
-		if serializer.is_valid():
-			serializer.save()
-			return Response(serializer.data)
-		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-	# DELETE
-	tache.delete()
-	return Response(status=status.HTTP_204_NO_CONTENT)
+    queryset = Tache.objects.all()
+    serializer_class = TacheSerializer
 
 
 def tache_detail(request, pk):
