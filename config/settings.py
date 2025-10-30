@@ -136,3 +136,12 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# Configuration Celery avec Redis comme broker
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BEAT_SCHEDULE = {
+    'tache_test_asynchrone_toutes_5s': {
+        'task': 'taches.tasks.tache_test_asynchrone',
+        'schedule': 5.0,
+    },
+}
