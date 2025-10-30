@@ -145,3 +145,6 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': 5.0,
     },
 }
+
+# Backend d'e-mail pour développement : affiche les e-mails dans la console.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
