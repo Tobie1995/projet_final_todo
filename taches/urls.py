@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from .views import TacheViewSet
+from .views import TestCeleryView
 
 app_name = "taches"
 
@@ -22,4 +23,5 @@ urlpatterns = [
 
     # Inclure les URLs générées par le routeur à la racine de l'app
     path('', include(router.urls)),
+    path('test-celery/', TestCeleryView.as_view(), name='test_celery'),
 ]

@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
+from django.views import View
+from django.http import HttpResponse
+from .tasks import tache_test_asynchrone
 
 from .models import Tache
 from .forms import TacheForm
@@ -191,3 +194,9 @@ def tache_delete_form(request, pk):
         return redirect(reverse('taches:liste_html'))
 
     return render(request, 'taches/tache_confirm_delete.html', {'tache': t})
+
+
+class TestCeleryView(View):
+    def get(self, request, *args, **kwargs):
+        tache_test_asynchrone.delay()
+        return HttpResponse("La tâche Celery a été lancée avec succès.")
