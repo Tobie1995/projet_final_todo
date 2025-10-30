@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.urls import reverse
 from django.views import View
 from django.http import HttpResponse
-from .tasks import tache_test_asynchrone
+from .tasks import tache_test_asynchrone, send_creation_email
 
 from .models import Tache
 from .forms import TacheForm
@@ -30,6 +30,8 @@ class TacheViewSet(ModelViewSet):
     def perform_create(self, serializer):
         # Associer l'utilisateur connecté via le champ de base de données 'owner'
         serializer.save(owner=self.request.user)
+        # Déclencher la tâche d'e-mail en arrière-plan après la création
+        send_creation_email.delay(serializer.instance.id)
 
 
 def tache_list(request):
@@ -141,6 +143,7 @@ def tache_create_form(request):
             t = form.save(commit=False)
             t.owner = user
             t.save()
+            send_creation_email.delay(t.id)
             return redirect(reverse('taches:liste_html'))
     else:
         form = TacheForm()

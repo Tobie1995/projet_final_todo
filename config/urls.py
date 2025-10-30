@@ -17,10 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('taches/', include('taches.urls', namespace='taches')),
+    # Endpoint pour obtenir un token d'authentification DRF
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     # Redirect root URL to the tasks HTML list view
     path('', RedirectView.as_view(pattern_name='taches:liste_html', permanent=False)),
 ]
