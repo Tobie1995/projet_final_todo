@@ -20,21 +20,28 @@ class TacheViewSet(ModelViewSet):
     """
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    # Suppression des permissions : tout le monde peut accéder
+    permission_classes = []
 
     def get_queryset(self):
-        user = getattr(self.request, "user", None)
-        if user and user.is_authenticated:
-            # Filtrer par le champ de base de données 'owner'
-            return Tache.objects.filter(owner=user).order_by('-cree_le')
-        # Non authentifié: autoriser la lecture publique (read-only)
+        # DEBUG: Afficher toutes les tâches pour tous les utilisateurs
         return Tache.objects.all().order_by('-cree_le')
 
     def perform_create(self, serializer):
         # Associer l'utilisateur connecté via le champ de base de données 'owner'
-        serializer.save(owner=self.request.user)
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(owner=user)
         # Déclencher la tâche d'e-mail en arrière-plan après la création
         send_creation_email.delay(serializer.instance.id)
+
+    def update(self, request, *args, **kwargs):
+        print('PATCH/PUT reçu:', request.data)
+        response = super().update(request, *args, **kwargs)
+        if response.status_code >= 400:
+            print('Erreur lors de la modification:', response.data)
+        else:
+            print('Réponse modification:', response.data)
+        return response
 
 
 def tache_list(request):
@@ -72,10 +79,7 @@ def tache_list_html(request):
 
 
 def tache_detail(request, pk):
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=403)
-    t = get_object_or_404(Tache, pk=pk, owner=user)
+    t = get_object_or_404(Tache, pk=pk)
     return JsonResponse({"id": t.pk, "titre": t.titre, "description": t.description, "termine": t.termine, "cree_le": t.cree_le.isoformat()})
 
 
@@ -85,10 +89,6 @@ def tache_create(request):
     Pour la création via formulaire HTML, utilisez `tache_create_form` (URL :
     `ajouter/`).
     """
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=403)
-    
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST with 'titre' and optional 'description' and 'termine'"})
 
@@ -97,15 +97,12 @@ def tache_create(request):
         return HttpResponseBadRequest("'titre' is required")
     description = request.POST.get("description", "")
     termine = request.POST.get("termine") in ("1", "true", "True", "on")
-    t = Tache.objects.create(titre=titre, description=description, termine=termine, owner=user)
+    t = Tache.objects.create(titre=titre, description=description, termine=termine)
     return JsonResponse({"id": t.pk, "titre": t.titre})
 
 
 def tache_update(request, pk):
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=403)
-    t = get_object_or_404(Tache, pk=pk, owner=user)
+    t = get_object_or_404(Tache, pk=pk)
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST with fields to update (titre, description, termine)"})
 
@@ -121,10 +118,7 @@ def tache_update(request, pk):
 
 
 def tache_delete(request, pk):
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return JsonResponse({"error": "Authentication required"}, status=403)
-    t = get_object_or_404(Tache, pk=pk, owner=user)
+    t = get_object_or_404(Tache, pk=pk)
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST to delete this resource"})
     t.delete()
@@ -136,16 +130,10 @@ def tache_create_form(request):
 
     En cas de succès, redirige vers la vue HTML list (nom : 'taches:liste_html').
     """
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return HttpResponseForbidden("Authentication required")
-    
     if request.method == 'POST':
         form = TacheForm(request.POST)
         if form.is_valid():
-            t = form.save(commit=False)
-            t.owner = user
-            t.save()
+            t = form.save()
             send_creation_email.delay(t.id)
             return redirect(reverse('taches:liste_html'))
     else:
@@ -160,15 +148,7 @@ def tache_update_form(request, pk):
     Réutilise le template `taches/tache_form.html`. En cas de succès, redirige
     vers la vue HTML list (nom : 'taches:liste_html').
     """
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return HttpResponseForbidden("Authentication required")
-    # Les superusers/staff peuvent modifier n'importe quelle tâche
-    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
-        t = get_object_or_404(Tache, pk=pk)
-    else:
-        t = get_object_or_404(Tache, pk=pk, owner=user)
-
+    t = get_object_or_404(Tache, pk=pk)
     if request.method == 'POST':
         form = TacheForm(request.POST, instance=t)
         if form.is_valid():
@@ -186,15 +166,7 @@ def tache_delete_form(request, pk):
     Utilise le template `taches/tache_confirm_delete.html`. Après suppression
     réussie, redirige vers la vue HTML list `taches:liste_html`.
     """
-    user = getattr(request, 'user', None)
-    if not user or not user.is_authenticated:
-        return HttpResponseForbidden("Authentication required")
-    # Les superusers/staff peuvent supprimer n'importe quelle tâche
-    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
-        t = get_object_or_404(Tache, pk=pk)
-    else:
-        t = get_object_or_404(Tache, pk=pk, owner=user)
-
+    t = get_object_or_404(Tache, pk=pk)
     if request.method == 'POST':
         t.delete()
         return redirect(reverse('taches:liste_html'))
