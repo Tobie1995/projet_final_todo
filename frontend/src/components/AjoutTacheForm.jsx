@@ -28,26 +28,23 @@ const AjoutTacheForm = ({ onAjoutTache }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="ajout-tache-form">
-      <div className="form-group">
+    <form onSubmit={handleSubmit} className="ajout-tache-form" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)', borderRadius: '10px', background: '#fff', margin: '16px auto', maxWidth: '500px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="form-group" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '10px' }}>
         <input
           type="text"
           value={nouvelleTache}
           onChange={handleChange}
+          className="form-input"
           placeholder="Saisissez une nouvelle tâche..."
-          className="champ-saisie"
           disabled={isLoading}
+          style={{ flex: 1, textAlign: 'center' }}
         />
-        <button 
-          type="submit" 
-          className="bouton-ajouter"
-          disabled={isLoading}
-        >
+        <button type="submit" className="btn-ajouter" disabled={isLoading}>
           {isLoading ? 'Ajout...' : 'Ajouter'}
         </button>
       </div>
     </form>
   );
-};
+}
 
 export default AjoutTacheForm;

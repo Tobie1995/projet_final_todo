@@ -1,8 +1,11 @@
-export default function TacheListe({ taches, error, onSuccess }) {
+
+import React from "react";
+import TacheItem from "./TacheItem";
+
+export default function TacheListe({ taches, error, handleSupprimeTache, handleToggleTache, handleUpdateTache, onSuccess }) {
   // Si onSuccess est passé, cela signifie que c'est le composant de connexion
   if (onSuccess) {
     const handleLogin = () => {
-      // Votre logique de connexion existante
       fetch('http://127.0.0.1:8000/taches/api/liste/', {
         method: 'GET',
         credentials: 'include',
@@ -14,9 +17,7 @@ export default function TacheListe({ taches, error, onSuccess }) {
           return res.json()
         })
         .then(() => {
-          const t = 'TOBIE' 
-          localStorage.setItem('authToken', t)
-          onSuccess(t)
+          onSuccess()
         })
         .catch((err) => {
           console.error('Erreur de connexion:', err)
@@ -47,16 +48,26 @@ export default function TacheListe({ taches, error, onSuccess }) {
 
   // Affichage de la liste des tâches
   return (
-    <div>
-      <h3>Liste des tâches</h3>
-      <ul>
-        {taches.map((tache, index) => {
-          const key = tache.id ?? tache.pk ?? index
-          const label = tache.titre ?? tache.nom ?? tache.name ?? tache.description ?? String(key)
-          return <li key={key}>{label}</li>
+    <div className="tache-liste">
+      <h2>Liste des tâches</h2>
+      <ul className="tache-items">
+        {taches.map((tache) => {
+          const key = tache.id || tache.pk;
+          if (!key) {
+            console.warn('Tâche sans clé unique !', tache);
+          }
+          return (
+            <TacheItem
+              key={key}
+              tache={tache}
+              handleSupprimeTache={handleSupprimeTache}
+              handleToggleTache={handleToggleTache}
+              handleUpdateTache={handleUpdateTache}
+            />
+          );
         })}
       </ul>
     </div>
-  )
+  );
 }
 

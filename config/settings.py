@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-waf^uwpc1q$$^5ule4l1uvj2^#lxf*-h-ly^(nv0wg5!i6-71_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# Ajout pour autoriser le frontend Vite
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
 
 
 # Application definition

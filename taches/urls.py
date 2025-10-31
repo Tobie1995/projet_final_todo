@@ -1,8 +1,11 @@
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from .views import TacheViewSet
 from .views import TestCeleryView
+
+from django.contrib.auth import views as auth_views
 
 app_name = "taches"
 
@@ -20,6 +23,9 @@ urlpatterns = [
     # Alias explicites pour l'API
     path("api/liste/", TacheViewSet.as_view({"get": "list"}), name="api_liste"),
     path("api/detail/<int:pk>/", TacheViewSet.as_view({"get": "retrieve"}), name="detail"),
+
+    # Route d'authentification API (login/logout)
+    path('api-auth/', include('rest_framework.urls')),  # /taches/api-auth/login/
 
     # Inclure les URLs générées par le routeur à la racine de l'app
     path('', include(router.urls)),
