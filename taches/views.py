@@ -9,6 +9,7 @@ from .models import Tache
 from .forms import TacheForm
 from rest_framework.viewsets import ModelViewSet
 from .serializers import TacheSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 
 
@@ -19,13 +20,15 @@ class TacheViewSet(ModelViewSet):
     """
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         user = getattr(self.request, "user", None)
         if user and user.is_authenticated:
             # Filtrer par le champ de base de données 'owner'
             return Tache.objects.filter(owner=user).order_by('-cree_le')
-        return Tache.objects.none()
+        # Non authentifié: autoriser la lecture publique (read-only)
+        return Tache.objects.all().order_by('-cree_le')
 
     def perform_create(self, serializer):
         # Associer l'utilisateur connecté via le champ de base de données 'owner'
