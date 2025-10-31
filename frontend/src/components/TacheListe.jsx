@@ -1,37 +1,38 @@
-import { useEffect, useState } from 'react'
-
-export default function TacheListeSimple() {
-  const [taches, setTaches] = useState([])
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/taches/api/liste/', {
-      method: 'GET',
-      credentials: 'include', // Important pour les sessions Django
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`Erreur ${res.status}: ${res.statusText}`)
-        }
-        return res.json()
+export default function TacheListe({ taches, error, onSuccess }) {
+  // Si onSuccess est passé, cela signifie que c'est le composant de connexion
+  if (onSuccess) {
+    const handleLogin = () => {
+      // Votre logique de connexion existante
+      fetch('http://127.0.0.1:8000/taches/api/liste/', {
+        method: 'GET',
+        credentials: 'include',
       })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setTaches(data)
-        } else if (Array.isArray(data?.results)) {
-          setTaches(data.results)
-        } else if (Array.isArray(data?.taches)) {
-          setTaches(data.taches)
-        } else {
-          setTaches([])
-        }
-      })
-      .catch((err) => {
-        setError(err.message)
-        setTaches([])
-      })
-  }, [])
+        .then(async (res) => {
+          if (!res.ok) {
+            throw new Error(`Erreur ${res.status}: ${res.statusText}`)
+          }
+          return res.json()
+        })
+        .then(() => {
+          const t = 'TOBIE' 
+          localStorage.setItem('authToken', t)
+          onSuccess(t)
+        })
+        .catch((err) => {
+          console.error('Erreur de connexion:', err)
+          window.location.href = 'http://127.0.0.1:8000/admin'
+        })
+    }
 
+    return (
+      <div>
+        <p>Veuillez vous connecter</p>
+        <button onClick={handleLogin}>Se connecter</button>
+      </div>
+    )
+  }
+
+  // Affichage des erreurs
   if (error) {
     return (
       <div>
@@ -44,6 +45,7 @@ export default function TacheListeSimple() {
     )
   }
 
+  // Affichage de la liste des tâches
   return (
     <div>
       <h3>Liste des tâches</h3>
@@ -57,3 +59,4 @@ export default function TacheListeSimple() {
     </div>
   )
 }
+
