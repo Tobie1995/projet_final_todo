@@ -134,7 +134,7 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
         <strong>Statut du rapport :</strong> {reportStatus}
       </div>
 
-      {/* Sélection groupée et suppression */}
+      {/* Sélection groupée et suppression  */}
       <div style={{ margin: '1em 0' }}>
         <input
           type="checkbox"
