@@ -86,7 +86,7 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
     return (
       <div>
         <p>Veuillez vous connecter</p>
-        <button onClick={handleLogin}>Se connecter maintenant</button>
+        <button onClick={handleLogin}>Se connecter</button>
       </div>
     )
   }

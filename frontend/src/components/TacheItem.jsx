@@ -42,6 +42,7 @@ const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdate
             placeholder="Titre de la tâche"
             style={{ flex: 1, textAlign: 'center' }}
           />
+          
         ) : (
           <span className="tache-titre" style={{ flex: 1, textAlign: 'center' }}>{localTitre}</span>
         )}
