@@ -160,6 +160,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 # Configuration Celery avec Redis comme broker
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'tache_test_asynchrone_toutes_5s': {
         'task': 'taches.tasks.tache_test_asynchrone',
