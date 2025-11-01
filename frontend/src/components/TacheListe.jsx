@@ -83,11 +83,10 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
           window.location.href = 'http://127.0.0.1:8000/admin'
         })
     }
-
     return (
       <div>
         <p>Veuillez vous connecter</p>
-        <button onClick={handleLogin}>Se connecter</button>
+        <button onClick={handleLogin}>Se connecter maintenant</button>
       </div>
     )
   }
