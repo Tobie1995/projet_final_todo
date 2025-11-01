@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdateTache }) => {
+const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdateTache, selected, onSelect }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitre, setEditTitre] = useState(tache.titre);
   const [localTitre, setLocalTitre] = useState(tache.titre);
@@ -26,10 +26,11 @@ const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdate
   return (
     <li className="tache-item" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)', borderRadius: '10px', background: '#fff', margin: '16px auto', maxWidth: '500px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1em', justifyContent: 'center', width: '100%' }}>
+        {/* Case à cocher pour la sélection multiple uniquement */}
         <input
           type="checkbox"
-          checked={!!tache.termine}
-          onChange={() => handleToggleTache(tache.id, tache.termine)}
+          checked={!!selected}
+          onChange={e => onSelect && onSelect(e.target.checked)}
           style={{ marginRight: "0.5em" }}
         />
         {isEditing ? (
@@ -41,6 +42,7 @@ const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdate
             placeholder="Titre de la tâche"
             style={{ flex: 1, textAlign: 'center' }}
           />
+          
         ) : (
           <span className="tache-titre" style={{ flex: 1, textAlign: 'center' }}>{localTitre}</span>
         )}
