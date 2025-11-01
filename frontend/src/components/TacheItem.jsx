@@ -47,7 +47,7 @@ const TacheItem = ({ tache, handleSupprimeTache, handleToggleTache, handleUpdate
         {isEditing ? (
           <>
             <button onClick={handleSaveEdit} className="btn-ajouter" style={{ marginRight: "0.5em" }}>Valider</button>
-            <button onClick={handleCancelEdit} className="btn-ajouter btn-ajouter:disabled">Annuler</button>
+              <button onClick={handleCancelEdit} className="btn-ajouter" style={{ backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', padding: '10px 16px', marginRight: '0.5em', cursor: 'pointer' }}>Annuler</button>
           </>
         ) : (
           <button onClick={handleEditClick} className="btn-ajouter" style={{ marginLeft: "1em" }}>Modifier</button>

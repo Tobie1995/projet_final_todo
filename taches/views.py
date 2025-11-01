@@ -3,13 +3,17 @@ from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbid
 from django.urls import reverse
 from django.views import View
 from django.http import HttpResponse
-from .tasks import tache_test_asynchrone, send_creation_email
+from .tasks import tache_test_asynchrone, send_creation_email, generate_task_report
 
 from .models import Tache
 from .forms import TacheForm
 from rest_framework.viewsets import ModelViewSet
 from .serializers import TacheSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from celery.result import AsyncResult
 
 
 
@@ -102,27 +106,23 @@ def tache_create(request):
 
 
 def tache_update(request, pk):
-    t = get_object_or_404(Tache, pk=pk)
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST with fields to update (titre, description, termine)"})
 
     titre = request.POST.get("titre")
-    if titre is not None:
-        t.titre = titre
-    if "description" in request.POST:
-        t.description = request.POST.get("description", "")
-    if "termine" in request.POST:
-        t.termine = request.POST.get("termine") in ("1", "true", "True", "on")
-    t.save()
-    return JsonResponse({"id": t.pk, "titre": t.titre, "termine": t.termine})
+    description = request.POST.get("description")
+    termine = request.POST.get("termine")
+    from .tasks import update_tache_async
+    task = update_tache_async.delay(pk, titre, description, termine)
+    return JsonResponse({"id": pk, "message": "Modification en cours (asynchrone)", "task_id": task.id})
 
 
 def tache_delete(request, pk):
-    t = get_object_or_404(Tache, pk=pk)
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST to delete this resource"})
-    t.delete()
-    return JsonResponse({"deleted": pk})
+    from .tasks import delete_tache_async
+    task = delete_tache_async.delay(pk)
+    return JsonResponse({"id": pk, "message": "Suppression en cours (asynchrone)", "task_id": task.id})
 
 
 def tache_create_form(request):
@@ -178,3 +178,22 @@ class TestCeleryView(View):
     def get(self, request, *args, **kwargs):
         tache_test_asynchrone.delay()
         return HttpResponse("La tâche Celery a été lancée avec succès.")
+
+
+from rest_framework.permissions import AllowAny
+
+class StartReportGenerationView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        task = generate_task_report.delay()
+        return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+
+
+class CheckTaskStatusView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, task_id):
+        result = AsyncResult(task_id)
+        return Response({
+            'state': result.state,
+            'result': result.result
+        }, status=status.HTTP_200_OK)
