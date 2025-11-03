@@ -17,13 +17,29 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
-from rest_framework.authtoken.views import obtain_auth_token
+
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Vue pour servir le build React
+from django.views.generic import View
+from django.http import FileResponse
+import os
+from django.conf import settings
+
+class ReactAppView(View):
+    def get(self, request, *args, **kwargs):
+        index_path = os.path.join(settings.BASE_DIR, 'frontend', 'dist', 'index.html')
+        return FileResponse(open(index_path, 'rb'))
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('taches/', include('taches.urls', namespace='taches')),
-    # Endpoint pour obtenir un token d'authentification DRF
-    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
-    # Redirect root URL to the tasks HTML list view
-    path('', RedirectView.as_view(pattern_name='taches:liste_html', permanent=False)),
+    # Endpoints JWT pour l'authentification
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Endpoints DRF login/logout
+    path('api-auth/', include('rest_framework.urls')),
+    # Toutes les autres URLs servent le build React
+    path('', ReactAppView.as_view(), name='react_app'),
+    path('<path:resource>', ReactAppView.as_view(), name='react_app_any'),
 ]

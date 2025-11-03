@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { storeTokenFromLogin } from '../api';
 
 function LoginForm({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -6,47 +7,20 @@ function LoginForm({ onLogin }) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fonction utilitaire pour récupérer le token CSRF dans les cookies
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
+  // ...existing code...
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     try {
-      const csrftoken = getCookie('csrftoken');
-      const response = await fetch('http://127.0.0.1:8000/taches/api-auth/login/', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': csrftoken,
-        },
-        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-      });
-      if (response.ok) {
-        setError('');
-        setUsername('');
-        setPassword('');
-        if (onLogin) onLogin();
-      } else {
-        setError('Identifiants invalides ou erreur serveur');
-      }
+      await storeTokenFromLogin(username, password);
+      setError('');
+      setUsername('');
+      setPassword('');
+      if (onLogin) onLogin();
     } catch (err) {
-      setError('Erreur de connexion');
+      setError(err.message || 'Erreur de connexion');
     } finally {
       setIsLoading(false);
     }

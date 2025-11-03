@@ -128,6 +128,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Ajout pour servir le build React
+import os
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend', 'dist'),
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -136,6 +142,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework default settings: use TokenAuthentication for the API
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         # Keep SessionAuthentication so the browsable API "Log in" works
         'rest_framework.authentication.SessionAuthentication',

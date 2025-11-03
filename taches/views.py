@@ -24,19 +24,23 @@ class TacheViewSet(ModelViewSet):
     """
     queryset = Tache.objects.all()
     serializer_class = TacheSerializer
-    # Suppression des permissions : tout le monde peut accéder
-    permission_classes = []
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        # DEBUG: Afficher toutes les tâches pour tous les utilisateurs
-        return Tache.objects.all().order_by('-cree_le')
+        # L'utilisateur ne voit que ses propres tâches
+        user = self.request.user
+        if user and user.is_authenticated:
+            return Tache.objects.filter(owner=user).order_by('-cree_le')
+        return Tache.objects.none()
 
     def perform_create(self, serializer):
-        # Associer l'utilisateur connecté via le champ de base de données 'owner'
-        user = self.request.user if self.request.user.is_authenticated else None
-        serializer.save(owner=user)
-        # Déclencher la tâche d'e-mail en arrière-plan après la création
-        send_creation_email.delay(serializer.instance.id)
+        # Assigne automatiquement la tâche à l'utilisateur connecté
+        user = self.request.user
+        if user and user.is_authenticated:
+            serializer.save(owner=user)
+            send_creation_email.delay(serializer.instance.id)
+        else:
+            raise ValueError("Vous devez être connecté pour créer une tâche.")
 
     def update(self, request, *args, **kwargs):
         print('PATCH/PUT reçu:', request.data)
@@ -96,12 +100,16 @@ def tache_create(request):
     if request.method != "POST":
         return JsonResponse({"detail": "Send a POST with 'titre' and optional 'description' and 'termine'"})
 
+    user = getattr(request, "user", None)
+    if not user or not user.is_authenticated:
+        return HttpResponseForbidden("Vous devez être connecté pour créer une tâche.")
+
     titre = request.POST.get("titre")
     if not titre:
         return HttpResponseBadRequest("'titre' is required")
     description = request.POST.get("description", "")
     termine = request.POST.get("termine") in ("1", "true", "True", "on")
-    t = Tache.objects.create(titre=titre, description=description, termine=termine)
+    t = Tache.objects.create(titre=titre, description=description, termine=termine, owner=user)
     return JsonResponse({"id": t.pk, "titre": t.titre})
 
 
