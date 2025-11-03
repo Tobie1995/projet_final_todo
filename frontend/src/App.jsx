@@ -1,9 +1,10 @@
-import './App.css'
-import { useEffect, useState } from 'react'
-import TacheListe from './components/TacheListe'
-import AjoutTacheForm from './components/AjoutTacheForm'
-// ...existing code...
-import { fetchTaches, handleAjoutTache, handleSupprimeTache, handleToggleTache } from './api'
+  // -------------------- IMPORTS EN HAUT DU FICHIER --------------------
+  import './App.css';
+  import { useEffect, useState } from 'react';
+  import TacheListe from './components/TacheListe';
+  import AjoutTacheForm from './components/AjoutTacheForm';
+  import LoginPage from './components/LoginPage';
+  import { fetchTaches, handleAjoutTache, handleSupprimeTache, handleToggleTache, handleUpdateTache, storeTokenFromLogin } from './api';
 
 function getCookie(name) {
   let cookieValue = null;
@@ -24,38 +25,48 @@ function App() {
   const [taches, setTaches] = useState([])
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
-  // Suppression de l'état d'authentification
-  const [isLoading, setIsLoading] = useState(true)
+  // Ajout de l'état token pour l'authentification
+  const [token, setToken] = useState(() => {
+    // On tente de lire le token depuis le localStorage au chargement
+    return localStorage.getItem('token') || '';
+  });
+    // Ajout de l'état isLoading
+    const [isLoading, setIsLoading] = useState(false);
 
-  // Fonction pour récupérer les tâches
-  const fetchTachesCallback = async () => {
+  // Fonction de connexion
+  const handleLogin = async (username, password) => {
     try {
-      const data = await fetchTaches();
-      if (Array.isArray(data)) {
-        setTaches(data);
-      } else if (Array.isArray(data?.results)) {
-        setTaches(data.results);
-      } else if (Array.isArray(data?.taches)) {
-        setTaches(data.taches);
-      } else {
-        setTaches([]);
-      }
-      setError('');
+      const token = await storeTokenFromLogin(username, password);
+      setToken(token);
     } catch (err) {
-      setError(err.message);
-      setTaches([]);
+      alert('Erreur de connexion : ' + err.message);
     }
-  }
-
-  useEffect(() => {
-    setIsLoading(true);
-    fetchTachesCallback().finally(() => setIsLoading(false));
-  }, []);
+  };
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken('');
+  };
+    // Fonction pour récupérer les tâches
+    const fetchTachesCallback = async () => {
+      try {
+        const tachesData = await fetchTaches();
+        setTaches(tachesData);
+        setError('');
+      } catch (err) {
+        setError('Erreur lors du chargement des tâches : ' + err.message);
+      }
+    };
+    useEffect(() => {
+      if (!token) return;
+      setIsLoading(true);
+      fetchTachesCallback().finally(() => setIsLoading(false));
+    }, [token]);
 
   // Fonction pour ajouter une tâche
   const handleAjoutTacheCallback = async (titre) => {
     try {
-      const nouvelleTache = await handleAjoutTache({ titre });
+      const nouvelleTache = await handleAjoutTache({ titre }, token);
       setTaches(prevTaches => [...prevTaches, nouvelleTache]);
       setSuccessMsg('Tâche ajoutée avec succès !');
       setTimeout(() => setSuccessMsg(''), 3000);
@@ -69,7 +80,7 @@ function App() {
   // Fonction pour supprimer une tâche
   const handleSupprimeTacheCallback = async (id) => {
     try {
-      await handleSupprimeTache(id);
+      await handleSupprimeTache(id, token);
       setTaches(prevTaches => prevTaches.filter(tache => tache.id !== id));
       setSuccessMsg('Tâche supprimée avec succès !');
       setTimeout(() => setSuccessMsg(''), 3000);
@@ -80,11 +91,11 @@ function App() {
   };
 
   // Fonction pour mettre à jour l'état terminee d'une tâche
-  const handleToggleTacheCallback = async (id, termine) => {
+  const handleToggleTacheCallback = async (id, done) => {
     try {
-      const updatedTache = await handleToggleTache(id, !termine);
+      const updatedTache = await handleToggleTache(id, !done, token);
       setTaches(prevTaches => prevTaches.map(tache =>
-        tache.id === id ? { ...tache, termine: updatedTache.termine } : tache
+        tache.id === id ? { ...tache, done: updatedTache.done } : tache
       ));
     } catch (err) {
       setError(err.message);
@@ -92,22 +103,9 @@ function App() {
   };
 
   // Fonction pour mettre à jour une tâche (ex: titre)
-  const handleUpdateTache = async (id, updatedFields) => {
+  const handleUpdateTacheCallback = async (id, updatedFields) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/taches/taches/${id}/`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedFields)
-      });
-      let errorText = '';
-      if (!response.ok) {
-        errorText = await response.text();
-        console.error('Erreur PATCH:', errorText);
-        throw new Error(`Erreur ${response.status}: ${response.statusText} - ${errorText}`);
-      }
-      const updatedTache = await response.json();
+      const updatedTache = await handleUpdateTache(id, updatedFields, token);
       setTaches(prevTaches => prevTaches.map(tache =>
         tache.id === id ? { ...tache, ...updatedTache } : tache
       ));
@@ -124,26 +122,33 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>Ma Liste de Tâches</h1>
+        {(token && token !== '') && (
+          <button onClick={handleLogout} style={{ marginLeft: 20 }}>Déconnexion</button>
+        )}
       </header>
-      <main className="app-main">
-        {isLoading ? (
-          <div className="loading">Chargement...</div>
+  <main className="app-main" style={{ maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '2em 1em' }}>
+        {(!token || token === '') ? (
+          <LoginPage handleLogin={handleLogin} />
         ) : (
-          <>
-            {successMsg && <div style={{ color: 'green', marginBottom: 10 }}>{successMsg}</div>}
-            <AjoutTacheForm onAjoutTache={handleAjoutTacheCallback} />
-            <TacheListe
-              taches={taches}
-              error={error}
-              handleSupprimeTache={handleSupprimeTacheCallback}
-              handleToggleTache={handleToggleTacheCallback}
-              handleUpdateTache={handleUpdateTache}
-            />
-          </>
+          isLoading ? (
+            <div className="loading">Chargement...</div>
+          ) : (
+            <>
+              {successMsg && <div style={{ color: 'green', marginBottom: 10 }}>{successMsg}</div>}
+              <AjoutTacheForm onAjoutTache={handleAjoutTacheCallback} />
+              <TacheListe
+                taches={taches}
+                error={error}
+                handleSupprimeTache={handleSupprimeTacheCallback}
+                handleToggleTache={handleToggleTacheCallback}
+                handleUpdateTache={handleUpdateTacheCallback}
+              />
+            </>
+          )
         )}
       </main>
     </div>
   )
 }
 
-export default App
+export default App;
