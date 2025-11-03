@@ -30,14 +30,20 @@ function App() {
     // On tente de lire le token depuis le localStorage au chargement
     return localStorage.getItem('token') || '';
   });
-    // Ajout de l'état isLoading
-    const [isLoading, setIsLoading] = useState(false);
+  // Ajout de l'état isLoading
+  const [isLoading, setIsLoading] = useState(false);
+  // Loader après connexion
+  const [postLoginLoading, setPostLoginLoading] = useState(false);
 
   // Fonction de connexion
   const handleLogin = async (username, password) => {
     try {
       const token = await storeTokenFromLogin(username, password);
-      setToken(token);
+      setPostLoginLoading(true);
+      setTimeout(() => {
+        setToken(token);
+        setPostLoginLoading(false);
+      }, 2000);
     } catch (err) {
       alert('Erreur de connexion : ' + err.message);
     }
@@ -120,15 +126,55 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Ma Liste de Tâches</h1>
+      <header className="app-header" style={{
+        background: 'linear-gradient(120deg, #2193b0 0%, #6dd5ed 100%)',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+        padding: '1.5em 2em',
+        borderRadius: '0 0 18px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '2em',
+      }}>
+        <h1 style={{
+          color: '#fff',
+          fontWeight: 800,
+          fontSize: '2.3em',
+          letterSpacing: '1px',
+          textShadow: '0 2px 8px rgba(0,0,0,0.10)',
+          margin: 0,
+        }}>Ma Liste de Tâches</h1>
         {(token && token !== '') && (
-          <button onClick={handleLogout} style={{ marginLeft: 20 }}>Déconnexion</button>
+          <button onClick={handleLogout} style={{
+            marginLeft: 20,
+            background: '#fff',
+            color: '#2193b0',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '0.7em 1.2em',
+            fontWeight: 600,
+            fontSize: '1em',
+            boxShadow: '0 2px 8px rgba(33,147,176,0.13)',
+            cursor: 'pointer',
+            transition: 'background 0.2s',
+          }}>Déconnexion</button>
         )}
       </header>
   <main className="app-main" style={{ maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '2em 1em' }}>
         {(!token || token === '') ? (
-          <LoginPage handleLogin={handleLogin} />
+          postLoginLoading ? (
+            <div className="loading" style={{textAlign:'center',marginTop:'5em',fontSize:'1.5em',color:'#2193b0'}}>
+              <div style={{marginBottom:'1em'}}>
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="24" r="20" stroke="#2193b0" strokeWidth="4" opacity="0.2"/>
+                  <path d="M44 24c0-11.05-8.95-20-20-20" stroke="#2193b0" strokeWidth="4" strokeLinecap="round"/>
+                </svg>
+              </div>
+              Connexion en cours...
+            </div>
+          ) : (
+            <LoginPage handleLogin={handleLogin} />
+          )
         ) : (
           isLoading ? (
             <div className="loading">Chargement...</div>
