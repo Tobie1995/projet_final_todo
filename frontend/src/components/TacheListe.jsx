@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-// ...existing code...
+import { checkReportStatus, startReport, getListeTaches } from "../api";
 import TacheItem from "./TacheItem";
 
 export default function TacheListe({ taches, error, handleSupprimeTache, handleToggleTache, handleUpdateTache, onSuccess }) {
@@ -22,9 +22,10 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
   };
 
   // Suppression groupée
+  const token = localStorage.getItem('token');
   const handleDeleteSelected = async () => {
     for (const id of selectedIds) {
-      await handleSupprimeTache(id);
+      await handleSupprimeTache(id, token);
     }
     setSelectedIds([]);
   };
@@ -37,12 +38,7 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
     if (!reportTaskId) return;
     intervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/taches/check-report-status/${reportTaskId}/`, {
-          method: "GET",
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("Erreur lors de la vérification du statut");
-        const data = await res.json();
+        const data = await checkReportStatus(reportTaskId, token);
         setReportStatus(`${data.state}${data.result ? ` : ${data.result}` : ""}`);
         if (data.state === "SUCCESS" || data.state === "FAILURE") {
           clearInterval(intervalRef.current);
@@ -60,29 +56,19 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
         intervalRef.current = null;
       }
     };
-  }, [reportTaskId]);
+  }, [reportTaskId, token]);
 
   // Si onSuccess est passé, cela signifie que c'est le composant de connexion
   if (onSuccess) {
-    const handleLogin = () => {
-      fetch('http://127.0.0.1:8000/taches/api/liste/', {
-        method: 'GET',
-        credentials: 'include',
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            throw new Error(`Erreur ${res.status}: ${res.statusText}`)
-          }
-          return res.json()
-        })
-        .then(() => {
-          onSuccess()
-        })
-        .catch((err) => {
-          console.error('Erreur de connexion:', err)
-          window.location.href = 'http://127.0.0.1:8000/admin'
-        })
-    }
+    const handleLogin = async () => {
+      try {
+        await getListeTaches(token);
+        onSuccess();
+      } catch (err) {
+        console.error('Erreur de connexion:', err);
+        window.location.href = 'http://127.0.0.1:8000/admin';
+      }
+    };
     return (
       <div>
         <p>Veuillez vous connecter</p>
@@ -106,19 +92,13 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
 
   // Affichage de la liste des tâches
   return (
-    <div className="tache-liste">
-      <h2>Liste des tâches</h2>
+    <div className="tache-liste" style={{ maxWidth: '900px', width: '100%', margin: '0 auto', padding: '2em 1em' }}>
+      <h2 style={{ fontSize: '2rem', marginBottom: '1em' }}>Liste des tâches</h2>
       {/* Bouton Générer un Rapport et affichage du statut */}
       <button
         onClick={async () => {
           try {
-            const res = await fetch("http://127.0.0.1:8000/taches/start-report/", {
-              method: "POST",
-              credentials: "include",
-              headers: { "Content-Type": "application/json" },
-            });
-            if (!res.ok) throw new Error("Erreur lors du démarrage du rapport");
-            const data = await res.json();
+            const data = await startReport(token);
             setReportTaskId(data.task_id);
             setReportStatus("En attente...");
           } catch (err) {
@@ -150,7 +130,7 @@ export default function TacheListe({ taches, error, handleSupprimeTache, handleT
         </button>
       </div>
 
-      <ul className="tache-items">
+  <ul className="tache-items" style={{ minHeight: '400px', fontSize: '1.1rem', background: '#f9f9f9', borderRadius: '8px', padding: '1em', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
         {taches.map((tache) => {
           const key = tache.id || tache.pk;
           if (!key) {
