@@ -177,3 +177,19 @@ CELERY_BEAT_SCHEDULE = {
 
 # Backend d'e-mail pour développement : affiche les e-mails dans la console.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'level': 'DEBUG',
+#         },
+#     },
+# }
