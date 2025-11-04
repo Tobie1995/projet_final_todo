@@ -1,9 +1,32 @@
+from django.db import connection
+def update_tache_terminee(request, tache_id):
+    """Exécute une requête SQL brute UPDATE pour terminer une tâche."""
+    with connection.cursor() as cursor:
+        cursor.execute("UPDATE taches_tache SET terminee = %s WHERE id = %s", [True, tache_id])
+    return JsonResponse({"success": True, "id": tache_id})
+def taches_par_statut_raw(request, status=True):
+    """Exemple sécurisé d'utilisation de Tache.objects.raw avec un paramètre."""
+    taches = Tache.objects.raw('SELECT * FROM taches_tache WHERE terminee = %s', [status])
+    titres = []
+    for tache in taches:
+        print(tache.titre)
+        titres.append(tache.titre)
+    return JsonResponse({"taches": titres})
+def taches_terminees_raw(request):
+    """Exemple d'utilisation de Tache.objects.raw() pour récupérer les tâches terminées."""
+    taches_terminees = Tache.objects.raw('SELECT * FROM taches_tache WHERE terminee = true')
+    titres = []
+    for tache in taches_terminees:
+        print(tache.titre)  # C'est bien un objet Tache !
+        titres.append(tache.titre)
+    return JsonResponse({"taches_terminees": titres})
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.urls import reverse
 from django.views import View
 from django.http import HttpResponse
 from .tasks import tache_test_asynchrone, send_creation_email, generate_task_report
+from django.db import transaction
 
 from .models import Tache
 from .forms import TacheForm
@@ -60,7 +83,10 @@ def tache_list(request):
     """
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
-        taches = Tache.objects.filter(owner=user).order_by('-cree_le')
+        queryset = Tache.objects.filter(owner=user, termine=False).order_by('-cree_le')
+        # Affiche la requête SQL générée dans la console
+        print("Requête SQL générée :", queryset.query)
+        taches = queryset
     else:
         taches = Tache.objects.none()
     data = [
@@ -109,7 +135,22 @@ def tache_create(request):
         return HttpResponseBadRequest("'titre' is required")
     description = request.POST.get("description", "")
     termine = request.POST.get("termine") in ("1", "true", "True", "on")
-    t = Tache.objects.create(titre=titre, description=description, termine=termine, owner=user)
+    try:
+        with transaction.atomic():
+            # Étape 1 : Créer la tâche
+            t = Tache.objects.create(titre=titre, description=description, termine=termine, owner=user)
+
+            # Étape 2 : Mettre à jour le profil
+            profile = user.profile
+            profile.task_count += 1
+            # Simule une erreur pour démonstration (décommentez pour tester le rollback)
+            # if some_condition:
+            #     raise Exception("Erreur simulée !")
+            profile.save()
+            # Si tout réussit, COMMIT est envoyé
+    except Exception as e:
+        print(f"La transaction a échoué : {e}")
+        return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"id": t.pk, "titre": t.titre})
 
 
