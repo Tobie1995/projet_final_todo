@@ -134,10 +134,28 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'frontend', 'dist'),
 ]
 
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging SQL pour la Partie 1
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'loggers': {
+            'django.db.backends': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+        },
+    }
 
 # Django REST Framework default settings: use TokenAuthentication for the API
 REST_FRAMEWORK = {

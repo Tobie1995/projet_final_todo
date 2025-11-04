@@ -56,6 +56,22 @@ class TacheViewSet(ModelViewSet):
             return Tache.objects.filter(owner=user).order_by('-cree_le')
         return Tache.objects.none()
 
+    # ...existing code...
+
+
+# Vue API pour lister les tâches avec les contenus des commentaires (N+1)
+class TacheAvecCommentairesView(APIView):
+    def get(self, request):
+        # Optimisation : prefetch_related pour éviter N+1
+        taches = Tache.objects.prefetch_related('commentaires').all()
+        data = []
+        for tache in taches:
+            commentaires = [c.contenu for c in tache.commentaires.all()]
+            data.append({
+                'titre': tache.titre,
+                'commentaires': commentaires
+            })
+        return Response(data)
     def perform_create(self, serializer):
         # Assigne automatiquement la tâche à l'utilisateur connecté
         user = self.request.user

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tache
+from .models import Tache, Commentaire
 
 
 @admin.register(Tache)
@@ -16,5 +16,7 @@ class TacheAdmin(admin.ModelAdmin):
 			obj.owner = request.user
 		super().save_model(request, obj, form, change)
 
+
 # Alternative simple registration:
 # admin.site.register(Tache)
+admin.site.register(Commentaire)

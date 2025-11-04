@@ -2,7 +2,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import TacheViewSet, TestCeleryView, StartReportGenerationView, CheckTaskStatusView
+from .views import TacheViewSet, TestCeleryView, StartReportGenerationView, CheckTaskStatusView, TacheAvecCommentairesView
 
 from django.contrib.auth import views as auth_views
 
@@ -22,6 +22,7 @@ urlpatterns = [
     # Alias explicites pour l'API
     path("api/liste/", TacheViewSet.as_view({"get": "list"}), name="api_liste"),
     path("api/detail/<int:pk>/", TacheViewSet.as_view({"get": "retrieve"}), name="detail"),
+    path('api/taches-avec-commentaires/', TacheAvecCommentairesView.as_view(), name='api_taches_avec_commentaires'),
     # Inclure les URLs générées par le routeur à la racine de l'app
     path('', include(router.urls)),
     path('test-celery/', TestCeleryView.as_view(), name='test_celery'),
