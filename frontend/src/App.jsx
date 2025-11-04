@@ -28,7 +28,12 @@ function App() {
   // Ajout de l'état token pour l'authentification
   const [token, setToken] = useState(() => {
     // On tente de lire le token depuis le localStorage au chargement
-    return localStorage.getItem('token') || '';
+    // Si le token n'existe pas, on force l'affichage du login
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      return '';
+    }
+    return storedToken;
   });
   // Ajout de l'état isLoading
   const [isLoading, setIsLoading] = useState(false);
@@ -124,6 +129,14 @@ function App() {
     }
   };
 
+  // Affiche toujours le login si aucun token n'est présent au premier lancement
+  if (!token || token === '') {
+    return (
+      <div className="app">
+        <LoginPage handleLogin={handleLogin} />
+      </div>
+    );
+  }
   return (
     <div className="app">
       <header className="app-header" style={{
@@ -144,57 +157,39 @@ function App() {
           textShadow: '0 2px 8px rgba(0,0,0,0.10)',
           margin: 0,
         }}>Ma Liste de Tâches</h1>
-        {(token && token !== '') && (
-          <button onClick={handleLogout} style={{
-            marginLeft: 20,
-            background: '#fff',
-            color: '#2193b0',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '0.7em 1.2em',
-            fontWeight: 600,
-            fontSize: '1em',
-            boxShadow: '0 2px 8px rgba(33,147,176,0.13)',
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-          }}>Déconnexion</button>
-        )}
+        <button onClick={handleLogout} style={{
+          marginLeft: 20,
+          background: '#fff',
+          color: '#2193b0',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '0.7em 1.2em',
+          fontWeight: 600,
+          fontSize: '1em',
+          boxShadow: '0 2px 8px rgba(33,147,176,0.13)',
+          cursor: 'pointer',
+          transition: 'background 0.2s',
+        }}>Déconnexion</button>
       </header>
-  <main className="app-main" style={{ maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '2em 1em' }}>
-        {(!token || token === '') ? (
-          postLoginLoading ? (
-            <div className="loading" style={{textAlign:'center',marginTop:'5em',fontSize:'1.5em',color:'#2193b0'}}>
-              <div style={{marginBottom:'1em'}}>
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="24" r="20" stroke="#2193b0" strokeWidth="4" opacity="0.2"/>
-                  <path d="M44 24c0-11.05-8.95-20-20-20" stroke="#2193b0" strokeWidth="4" strokeLinecap="round"/>
-                </svg>
-              </div>
-              Connexion en cours...
-            </div>
-          ) : (
-            <LoginPage handleLogin={handleLogin} />
-          )
+      <main className="app-main" style={{ maxWidth: '1100px', width: '100%', margin: '0 auto', padding: '2em 1em' }}>
+        {isLoading ? (
+          <div className="loading">Chargement...</div>
         ) : (
-          isLoading ? (
-            <div className="loading">Chargement...</div>
-          ) : (
-            <>
-              {successMsg && <div style={{ color: 'green', marginBottom: 10 }}>{successMsg}</div>}
-              <AjoutTacheForm onAjoutTache={handleAjoutTacheCallback} />
-              <TacheListe
-                taches={taches}
-                error={error}
-                handleSupprimeTache={handleSupprimeTacheCallback}
-                handleToggleTache={handleToggleTacheCallback}
-                handleUpdateTache={handleUpdateTacheCallback}
-              />
-            </>
-          )
+          <>
+            {successMsg && <div style={{ color: 'green', marginBottom: 10 }}>{successMsg}</div>}
+            <AjoutTacheForm onAjoutTache={handleAjoutTacheCallback} />
+            <TacheListe
+              taches={taches}
+              error={error}
+              handleSupprimeTache={handleSupprimeTacheCallback}
+              handleToggleTache={handleToggleTacheCallback}
+              handleUpdateTache={handleUpdateTacheCallback}
+            />
+          </>
         )}
       </main>
     </div>
-  )
+  );
 }
 
 export default App;
